@@ -31,7 +31,8 @@ def convert(locale):
         if not os.path.isdir(target_dir):
             os.mkdir(target_dir)
         with open(os.path.join(target_dir, "messages.json"), "w") as out_file:
-            out_file.write(json.dumps(target_messages, sort_keys=True, indent=4))
+            out_file.write(
+                json.dumps(target_messages, sort_keys=True, indent=4))
 
 
 for locale in os.listdir(source_dir):
