@@ -4,10 +4,10 @@ Given two directories, copy Firefox-style https-everywhere.dtd translations from
 the first directory into appropriately-named Chromium-style messages.json
 translations in the second directory.
 """
+import json
+import os
 import re
 import sys
-import os
-import json
 
 source_dir = sys.argv[1]
 dest_dir = sys.argv[2]
