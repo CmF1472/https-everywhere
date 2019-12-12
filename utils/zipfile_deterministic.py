@@ -9,14 +9,14 @@ by Yan Zhu <yan@mit.edu>.
 Derived from Python 3.6, Copyright © 2001-2018 Python Software Foundation; All
 Rights Reserved
 """
+import binascii
+import importlib.util
 import io
 import os
-import importlib.util
-import sys
-import stat
 import shutil
+import stat
 import struct
-import binascii
+import sys
 
 try:
     import threading
