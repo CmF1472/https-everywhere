@@ -5,7 +5,7 @@
 Use this section to tell people about which versions of your project are
 currently being supported with security updates.
 
-| Browser         |  Supported         |
+| Browser         | Supported          |
 | --------------- | ------------------ |
 | Firefox         | :white_check_mark: |
 | Firefox Android | :white_check_mark: |
