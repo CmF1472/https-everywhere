@@ -1,6 +1,6 @@
 <!--
 	See also Gpg4win.org.xml
-	
+
 	Invalid certificate:
 		- ftp.gpg4win.de
 -->
@@ -13,5 +13,5 @@
 	<securecookie host=".+" name=".+" />
 
 	<rule from="^http:" to="https:" />
-	
+
 </ruleset>
