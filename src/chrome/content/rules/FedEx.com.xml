@@ -33,7 +33,7 @@
 	<target host="samedaycity.fedex.com" />
 	<target host="supplychain.fedex.com" />
 	<target host="wwwtest.fedex.com" />
-	
+
 	<exclusion pattern="^http://www\.fedex\.com/kr/" />
 
 	<test url="http://www.fedex.com/kr/docs/" />
