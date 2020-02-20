@@ -27,6 +27,7 @@ from datetime import datetime
 
 timestamp = datetime.now().replace(microsecond=0)
 
+
 def convertLoglevel(levelString):
     """Converts string 'debug', 'info', etc. into corresponding
     logging.XXX value which is returned.
@@ -131,7 +132,8 @@ class UrlComparisonThread(threading.Thread):
         self.resQueue.put(res)
 
     def fetchUrl(self, plainUrl, transformedUrl, fetcherPlain, fetcherRewriting, ruleFname):
-        logging.debug("=**= Start {} => {} ****".format(plainUrl, transformedUrl))
+        logging.debug(
+            "=**= Start {} => {} ****".format(plainUrl, transformedUrl))
         logging.debug("Fetching transformed page {}".format(transformedUrl))
         transformedRcode, transformedPage = fetcherRewriting.fetchHtml(
             transformedUrl)
@@ -146,7 +148,7 @@ class UrlComparisonThread(threading.Thread):
             errno, message = e.args
             if errno == 6:
                 message = "Time: {}\n Fetch error: {} => {}: {}".format(timestamp,
-                    plainUrl, transformedUrl, e)
+                                                                        plainUrl, transformedUrl, e)
                 self.queue_result("error", "fetch-error {}".format(e),
                                   ruleFname, plainUrl, https_url=transformedUrl)
                 return message
@@ -207,11 +209,11 @@ class UrlComparisonThread(threading.Thread):
                     message = "Fetch error: {} => {}: {}".format(
                         plainUrl, transformedUrl, e)
                     self.queue_result("error", "fetch-error {}".format(e),
-                                    ruleFname, plainUrl, https_url=transformedUrl)
+                                      ruleFname, plainUrl, https_url=transformedUrl)
                     logging.debug(message)
 
         logging.info("Finished comparing {} -> {}. Rulefile: {}.".format(
-                    plainUrl, transformedUrl, ruleFname))
+            plainUrl, transformedUrl, ruleFname))
 
         return [message, plainUrl]
 
@@ -230,15 +232,16 @@ def disableRuleset(ruleset, problemRules, urlCount):
         logging.info("Disabling ruleset {}".format(ruleset.filename))
         disableMessage = "Entire ruleset disabled at {}\n".format(timestamp)
         contents = re.sub("(<ruleset [^>]*)>",
-            "\\1 default_off=\"failed ruleset test\">", contents);
+                          "\\1 default_off=\"failed ruleset test\">", contents)
     # If not all targets, just the target
     else:
         for rule in rules:
-            disableMessage = "The following targets have been disabled at {}:\n".format(timestamp)
+            disableMessage = "The following targets have been disabled at {}:\n".format(
+                timestamp)
             host = urllib.parse.urlparse(rule)
             logging.info("Disabling target {}".format(host.netloc))
             contents = re.sub('<[ \n]*target[ \n]+host[ \n]*=[ \n]*"{}"[ \n]*\/?[ \n]*>'.format(host.netloc),
-                '<!-- target host="{}" /-->'.format(host.netloc), contents);
+                              '<!-- target host="{}" /-->'.format(host.netloc), contents)
 
     # Since the problems are going to be inserted into an XML comment, they cannot
     # contain "--", or they will generate a parse error. Split up all "--" with a
@@ -388,7 +391,8 @@ def cli():
                 "Skipping rule file '{}', matches skiplist.".format(xmlFname))
             continue
 
-        ruleset = Ruleset(etree.parse(open(xmlFname, "rb")).getroot(), xmlFname)
+        ruleset = Ruleset(etree.parse(
+            open(xmlFname, "rb")).getroot(), xmlFname)
         if ruleset.defaultOff and not includeDefaultOff:
             logging.debug("Skipping rule '{}', reason: {}".format(
                           ruleset.name, ruleset.defaultOff))
@@ -401,19 +405,22 @@ def cli():
                 coverageProblemsExist = True
                 logging.error(problem)
         if checkTargetValidity:
-            logging.debug("Checking target validity for '{}'.".format(ruleset.name))
+            logging.debug(
+                "Checking target validity for '{}'.".format(ruleset.name))
             problems = ruleset.getTargetValidityProblems()
             for problem in problems:
                 targetValidityProblemExist = True
                 logging.error(problem)
         if checkNonmatchGroups:
-            logging.debug("Checking non-match groups for '{}'.".format(ruleset.name))
+            logging.debug(
+                "Checking non-match groups for '{}'.".format(ruleset.name))
             problems = ruleset.getNonmatchGroupProblems()
             for problem in problems:
                 nonmatchGroupProblemsExist = True
                 logging.error(problem)
         if checkTestFormatting:
-            logging.debug("Checking test formatting for '{}'.".format(ruleset.name))
+            logging.debug(
+                "Checking test formatting for '{}'.".format(ruleset.name))
             problems = ruleset.getTestFormattingProblems()
             for problem in problems:
                 testFormattingProblemsExist = True
@@ -461,7 +468,8 @@ def cli():
             for ruleset in rulesets:
                 if ruleset.platform != "default" and os.path.isdir(os.path.join(certdir, ruleset.platform)):
                     theseFetchers = copy.deepcopy(fetchers)
-                    platforms.addPlatform(ruleset.platform, os.path.join(certdir, ruleset.platform))
+                    platforms.addPlatform(
+                        ruleset.platform, os.path.join(certdir, ruleset.platform))
                     theseFetchers.append(http_client.HTTPFetcher(
                         ruleset.platform, platforms, fetchOptions, trie))
                 else:
@@ -474,8 +482,10 @@ def cli():
                     else:
                         # TODO: We should fetch the non-rewritten exclusion URLs to make
                         # sure they still exist.
-                        logging.debug("Skipping excluded URL {}".format(test.url))
-                task = ComparisonTask(testUrls, fetcherPlain, theseFetchers, ruleset)
+                        logging.debug(
+                            "Skipping excluded URL {}".format(test.url))
+                task = ComparisonTask(
+                    testUrls, fetcherPlain, theseFetchers, ruleset)
                 taskQueue.put(task)
 
         taskQueue.join()
