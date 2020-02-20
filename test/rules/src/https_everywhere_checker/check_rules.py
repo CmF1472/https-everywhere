@@ -1,11 +1,10 @@
 #!/usr/bin/env python3.6
-
-import binascii
 import argparse
+import binascii
 import copy
-import json
 import glob
 import hashlib
+import json
 import logging
 import os
 import queue
@@ -13,17 +12,15 @@ import re
 import sys
 import threading
 import time
-
+import urllib.parse
 from configparser import ConfigParser
-
-from lxml import etree
+from datetime import datetime
 
 import http_client
 import metrics
-import urllib.parse
-from rules import Ruleset
+from lxml import etree
 from rule_trie import RuleTrie
-from datetime import datetime
+from rules import Ruleset
 
 timestamp = datetime.now().replace(microsecond=0)
 
