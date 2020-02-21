@@ -66,7 +66,7 @@
 	<target host="ww.npr.org" />
 	<target host="www-cdn.npr.org" />
 	<target host="www-cf.npr.org" />
-	
+
 	<securecookie host=".+" name=".+" />
 
 	<rule from="^http:" to="https:" />
