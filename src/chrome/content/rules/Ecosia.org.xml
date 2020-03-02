@@ -2,7 +2,7 @@
 	<target host="ecosia.org" />
 	<target host="*.ecosia.org" />
 	<target host="ecosia.co" />
-	
+
 	<test url="http://analytics.ecosia.org/analytics.js"/>
 	<test url="http://blog.ecosia.org/content/images/2018/06/We-re-now-in-Peru-and-Madagascar-1.jpg"/>
 	<test url="http://blog.ecosia.org/ecosia-financial-reports-tree-planting-receipts/"/>
@@ -21,7 +21,7 @@
 	<test url="http://ps.ecosia.org/FVh3ot2zPwDMi43LjI.js"/>
 	<test url="http://videos-cdn.ecosia.org/video-en-81a0480ed573f7d7d5d4e58559d30ded.webm"/>
 	<test url="http://www.ecosia.org/ecosia-news"/>
-	
+
 	<rule from="^http:"
           to="https:" />
 </ruleset>
