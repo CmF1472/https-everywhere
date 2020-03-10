@@ -335,7 +335,8 @@ class HTTPFetcher(object):
             # We want to check against only the above path, but unfortunately
             # curl will not function properly unless *some* valid certificate
             # is provided for CURLOPT_CAINFO. This can not be set to null...
-            c.setopt(c.CAINFO, str(pathlib.Path('test', 'rules', 'platform_certs', 'default', 'cert001.pem')))
+            c.setopt(c.CAINFO, str(pathlib.Path('test', 'rules',
+                                                'platform_certs', 'default', 'cert001.pem')))
             if options.userAgent:
                 c.setopt(c.USERAGENT, options.userAgent)
             # Sending this extra header is necessary for weird edge cases.  See https://github.com/EFForg/https-everywhere/pull/10944
@@ -397,7 +398,8 @@ class HTTPFetcher(object):
 
             # shitty HTTP header parsing
             if httpCode == 0:
-                raise HTTPFetcherError("Pycurl fetch failed for '{}'".format(newUrl))
+                raise HTTPFetcherError(
+                    "Pycurl fetch failed for '{}'".format(newUrl))
             elif httpCode in (301, 302, 303, 307, 308):
                 location = None
                 for piece in headerStr.split('\n'):
@@ -408,7 +410,8 @@ class HTTPFetcher(object):
                         "Redirect for '{}' missing location header".format(newUrl))
 
                 location = self.absolutizeUrl(newUrl, location)
-                logging.debug("Following redirect {} => {}".format(newUrl, location))
+                logging.debug(
+                    "Following redirect {} => {}".format(newUrl, location))
 
                 if self.ruleTrie:
                     ruleMatch = self.ruleTrie.transformUrl(location)
@@ -435,7 +438,8 @@ class HTTPFetcher(object):
 
             return (httpCode, bufValue)
 
-        raise HTTPFetcherError("Too many redirects while fetching '{}'".format(url))
+        raise HTTPFetcherError(
+            "Too many redirects while fetching '{}'".format(url))
 
 
 def subprocessFetch():
