@@ -1,14 +1,15 @@
-import sys
-import logging
-import pycurl
-import urllib.parse
 import io
+import logging
 import pathlib
 import pickle
+import re
+import subprocess
+import sys
 import tempfile
 import traceback
-import subprocess
-import re
+import urllib.parse
+
+import pycurl
 
 # We need a cookie jar because some sites (e.g. forums.aws.amazon.com) go into a
 # redirect loop without it.
