@@ -72,7 +72,8 @@ class FetchOptions(object):
         if config.has_option("http", "curl_verbose"):
             self.curlVerbose = config.getboolean("http", "curl_verbose")
         if config.has_option("http", "fetch_in_subprocess"):
-            self.useSubprocess = config.getboolean("http", "fetch_in_subprocess")
+            self.useSubprocess = config.getboolean("http",
+                                                   "fetch_in_subprocess")
         if config.has_option("http", "cipherList"):
             self.cipherList = config.get("http", "cipherList")
         if config.has_option("http", "ssl_version"):
@@ -81,10 +82,8 @@ class FetchOptions(object):
                 self.sslVersion = getattr(pycurl, "SSLVERSION_" + versionStr)
             except AttributeError:
                 raise ValueError(
-                    "SSL version '{}' specified in config is unsupported.".format(
-                        versionStr
-                    )
-                )
+                    "SSL version '{}' specified in config is unsupported.".
+                    format(versionStr))
         if config.has_option("http", "static_ca_path"):
             self.staticCAPath = config.get("http", "static_ca_path")
 
@@ -119,9 +118,12 @@ class FetcherOutArgs(object):
     with subprocess PyCURL invocation.
     """
 
-    def __init__(
-        self, httpCode=None, data=None, headerStr=None, errorStr=None, shortError=None
-    ):
+    def __init__(self,
+                 httpCode=None,
+                 data=None,
+                 headerStr=None,
+                 errorStr=None,
+                 shortError=None):
         """
         @param httpCode: return HTTP code as int
         @param data: data fetched from URL as str
@@ -176,7 +178,8 @@ class ErrorSanitizer:
                 "ssl: certificate subject mismatch",
             ),
             ("Failed to connect to .*No route to host", "no route to host"),
-            ("Failed to connect to .*Connection refused", "connection refused"),
+            ("Failed to connect to .*Connection refused",
+             "connection refused"),
             (
                 "gnutls_handshake\\(\\) failed: Error in the pull function\\.",
                 "gnutls: handshake fail in pull",
@@ -292,9 +295,10 @@ class HTTPFetcher(object):
         # reason it was a hog on CPU and RAM (maybe due to the queues?)
         # Also, logging module didn't play along nicely.
         args = [sys.executable, "-c", trampoline]
-        p = subprocess.Popen(
-            args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-        )
+        p = subprocess.Popen(args,
+                             stdin=subprocess.PIPE,
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE)
 
         # Hopefully we shouldn't deadlock here: first all data is written
         # to subprocess's stdin, it will unpickle them first. Then we
@@ -308,22 +312,18 @@ class HTTPFetcher(object):
 
         if exitCode != 0:
             raise HTTPFetcherError(
-                "Subprocess failed with exit code {}".format(exitCode)
-            )
+                "Subprocess failed with exit code {}".format(exitCode))
 
         # logging.debug("Subprocess finished OK")
         unpickled = pickle.loads(outData)
         if not isinstance(unpickled, FetcherOutArgs):
             raise HTTPFetcherError(
                 "Unexpected datatype received from subprocess: {}".format(
-                    type(unpickled)
-                )
-            )
+                    type(unpickled)))
         if unpickled.errorStr:  # chained exception tracebacks are bit ugly/long
             assert unpickled.shortError is not None
-            raise HTTPFetcherError(
-                ErrorSanitizer().fetcher(unpickled.shortError, unpickled.errorStr)
-            )
+            raise HTTPFetcherError(ErrorSanitizer().fetcher(
+                unpickled.shortError, unpickled.errorStr))
 
         return unpickled
 
@@ -362,10 +362,8 @@ class HTTPFetcher(object):
             c.setopt(
                 c.CAINFO,
                 str(
-                    pathlib.Path(
-                        "test", "rules", "platform_certs", "default", "cert001.pem"
-                    )
-                ),
+                    pathlib.Path("test", "rules", "platform_certs", "default",
+                                 "cert001.pem")),
             )
             if options.userAgent:
                 c.setopt(c.USERAGENT, options.userAgent)
@@ -428,19 +426,21 @@ class HTTPFetcher(object):
 
             # shitty HTTP header parsing
             if httpCode == 0:
-                raise HTTPFetcherError("Pycurl fetch failed for '{}'".format(newUrl))
+                raise HTTPFetcherError(
+                    "Pycurl fetch failed for '{}'".format(newUrl))
             elif httpCode in (301, 302, 303, 307, 308):
                 location = None
                 for piece in headerStr.split("\n"):
                     if piece.lower().startswith("location:"):
-                        location = piece[len("location:") :].strip()
+                        location = piece[len("location:"):].strip()
                 if location is None:
                     raise HTTPFetcherError(
-                        "Redirect for '{}' missing location header".format(newUrl)
-                    )
+                        "Redirect for '{}' missing location header".format(
+                            newUrl))
 
                 location = self.absolutizeUrl(newUrl, location)
-                logging.debug("Following redirect {} => {}".format(newUrl, location))
+                logging.debug("Following redirect {} => {}".format(
+                    newUrl, location))
 
                 if self.ruleTrie:
                     ruleMatch = self.ruleTrie.transformUrl(location)
@@ -453,15 +453,13 @@ class HTTPFetcher(object):
                     # same as the originating site.
                     if ruleMatch.ruleset:
                         newUrlPlatformPath = self.certPlatforms.getCAPath(
-                            ruleMatch.ruleset.platform
-                        )
+                            ruleMatch.ruleset.platform)
                     else:
                         newUrlPlatformPath = self.platformPath
 
                     if newUrl != location:
-                        logging.debug(
-                            "Redirect rewritten: {} => {}".format(location, newUrl)
-                        )
+                        logging.debug("Redirect rewritten: {} => {}".format(
+                            location, newUrl))
                 else:
                     newUrl = location
 
@@ -469,7 +467,8 @@ class HTTPFetcher(object):
 
             return (httpCode, bufValue)
 
-        raise HTTPFetcherError("Too many redirects while fetching '{}'".format(url))
+        raise HTTPFetcherError(
+            "Too many redirects while fetching '{}'".format(url))
 
 
 def subprocessFetch():
@@ -483,9 +482,8 @@ def subprocessFetch():
     try:
         inArgs = pickle.load(sys.stdin)
         inArgs.check()
-        outArgs = HTTPFetcher.staticFetch(
-            inArgs.url, inArgs.options, inArgs.platformPath
-        )
+        outArgs = HTTPFetcher.staticFetch(inArgs.url, inArgs.options,
+                                          inArgs.platformPath)
     except BaseException as e:  # this will trap KeyboardInterrupt as well
         errorStr = traceback.format_exc()
         shortError = str(e)
@@ -494,8 +492,7 @@ def subprocessFetch():
     if outArgs is None:
         shortError = "Subprocess logic error - no output args"
         errorStr = traceback.format_exception_only(
-            HTTPFetcherError, HTTPFetcherError(shortError)
-        )
+            HTTPFetcherError, HTTPFetcherError(shortError))
         outArgs = FetcherOutArgs(errorStr=errorStr, shortError=shortError)
 
     try:
