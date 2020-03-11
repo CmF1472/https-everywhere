@@ -1,13 +1,13 @@
 #!/bin/bash
 set -x
 toplevel="$(git rev-parse --show-toplevel)"
-testdir="${toplevel}/test/selenium"
-srcdir="${toplevel}/chromium"
-linter="${toplevel}/utils/eslint/node_modules/.bin/eslint --ignore-path ${srcdir}/.eslintignore"
+testdir="$toplevel/test/selenium"
+srcdir="$toplevel/chromium"
+linter="$toplevel/utils/eslint/node_modules/.bin/eslint --ignore-path $srcdir/.eslintignore"
 
 
 function run_lint {
-  $linter $srcdir
+  "$linter" "$srcdir"
   if [ $? != 0 ]; then
     echo "Linting errors"
     exit 1
@@ -15,7 +15,7 @@ function run_lint {
 }
 
 function run_unittests {
-  pushd ${srcdir}
+  pushd "$srcdir"
     npm run cover # run with coverage
     if [ $? != 0 ]; then
         echo "unittest errors"
@@ -26,7 +26,7 @@ function run_unittests {
 }
 
 function run_selenium {
-  ENABLE_XVFB=1 pytest -v --capture=no ${testdir} # autodiscover and run the tests
+  ENABLE_XVFB=1 pytest -v --capture=no "$testdir" # autodiscover and run the tests
 }
 
 if [ "$TEST" == "lint" ]; then
@@ -45,11 +45,11 @@ elif [ "$TEST" == "validations" ] || [ "$TEST" == "fetch" ] || [ "$TEST" == "pre
     if [ -n "$GIT_DIR" ]
     then
       # $GIT_DIR is set, so we're running as a hook.
-      cd $GIT_DIR
+      cd "$GIT_DIR"
       cd ..
     else
       # Let's CD to the right place.
-      cd $toplevel
+      cd "$toplevel"
     fi
 
     # Fetch the current GitHub version of HTTPS-E to compare to its master
@@ -57,15 +57,15 @@ elif [ "$TEST" == "validations" ] || [ "$TEST" == "fetch" ] || [ "$TEST" == "pre
     trap 'git remote remove upstream-for-travis' EXIT
 
     # Only do a shallow fetch if we're in Travis.  No need otherwise.
-    if [ $TRAVIS ]; then
+    if [ "$TRAVIS" ]; then
       git fetch --depth=50 upstream-for-travis master
     else
       git fetch upstream-for-travis master
     fi
 
     COMMON_BASE_COMMIT=$(git merge-base upstream-for-travis/master HEAD)
-    RULESETS_CHANGED=$(git diff --name-only $COMMON_BASE_COMMIT | grep $RULESETFOLDER | grep '.xml')
-    if [ "$(git diff --name-only $COMMON_BASE_COMMIT)" != "$RULESETS_CHANGED" ]; then
+    RULESETS_CHANGED=$(git diff --name-only "$COMMON_BASE_COMMIT" | grep "$RULESETFOLDER" | grep '.xml')
+    if [ "$(git diff --name-only "$COMMON_BASE_COMMIT")" != "$RULESETS_CHANGED" ]; then
       ONLY_RULESETS_CHANGED=false
     fi
 
@@ -74,19 +74,19 @@ elif [ "$TEST" == "validations" ] || [ "$TEST" == "fetch" ] || [ "$TEST" == "pre
 
     if [ "$TEST" == "validations" ]; then
       echo >&2 "Performing validations on rulesets."
-      docker run --rm -ti -v $(pwd):/opt httpse bash -c "test/validations.sh"
+      docker run --rm -ti -v "$PWD":/opt httpse bash -c "test/validations.sh"
     fi
 
     if [ "$TEST" == "fetch" ]; then
       echo >&2 "Testing test URLs in all changed rulesets."
       # NET_ADMIN capability is required here for miredo to create a network tunnel
-      docker run --rm -ti -v $(pwd):/opt -e RULESETS_CHANGED="$RULESETS_CHANGED" --sysctl net.ipv6.conf.all.disable_ipv6=0 --cap-add NET_ADMIN --cap-add MKNOD httpse bash -c "mkdir -p /dev/net && mknod /dev/net/tun c 10 200 && service miredo start && service tor start && test/fetch.sh"
+      docker run --rm -ti -v "$PWD":/opt -e RULESETS_CHANGED="$RULESETS_CHANGED" --sysctl net.ipv6.conf.all.disable_ipv6=0 --cap-add NET_ADMIN --cap-add MKNOD httpse bash -c "mkdir -p /dev/net && mknod /dev/net/tun c 10 200 && service miredo start && service tor start && test/fetch.sh"
     fi
 
     if [ "$TEST" == "preloaded" ]; then
       echo >&2 "Ensuring rulesets do not introduce targets which are already HSTS preloaded."
-      docker run --rm -ti -v $(pwd):/opt -e RULESETS_CHANGED="$RULESETS_CHANGED" node bash -c "cd /opt/utils/hsts-prune && npm install && node index.js"
-      [ `git diff --name-only $RULESETFOLDER | wc -l` -eq 0 ]
+      docker run --rm -ti -v "$PWD":/opt -e RULESETS_CHANGED="$RULESETS_CHANGED" node bash -c "cd /opt/utils/hsts-prune && npm install && node index.js"
+      [ "$(git diff --name-only "$RULESETFOLDER" | wc -l)" -eq 0 ]
     fi
 
     exit 0
