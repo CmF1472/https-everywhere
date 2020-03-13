@@ -1,14 +1,15 @@
-import sys
-import logging
-import pycurl
-import urllib.parse
 import io
+import logging
 import pathlib
 import pickle
+import re
+import subprocess
+import sys
 import tempfile
 import traceback
-import subprocess
-import re
+import urllib.parse
+
+import pycurl
 
 # We need a cookie jar because some sites (e.g. forums.aws.amazon.com) go into a
 # redirect loop without it.
@@ -71,17 +72,18 @@ class FetchOptions(object):
         if config.has_option("http", "curl_verbose"):
             self.curlVerbose = config.getboolean("http", "curl_verbose")
         if config.has_option("http", "fetch_in_subprocess"):
-            self.useSubprocess = config.getboolean(
-                "http", "fetch_in_subprocess")
+            self.useSubprocess = config.getboolean("http",
+                                                   "fetch_in_subprocess")
         if config.has_option("http", "cipherList"):
             self.cipherList = config.get("http", "cipherList")
         if config.has_option("http", "ssl_version"):
             versionStr = config.get("http", "ssl_version")
             try:
-                self.sslVersion = getattr(pycurl, 'SSLVERSION_' + versionStr)
+                self.sslVersion = getattr(pycurl, "SSLVERSION_" + versionStr)
             except AttributeError:
                 raise ValueError(
-                    "SSL version '{}' specified in config is unsupported.".format(versionStr))
+                    "SSL version '{}' specified in config is unsupported.".
+                    format(versionStr))
         if config.has_option("http", "static_ca_path"):
             self.staticCAPath = config.get("http", "static_ca_path")
 
@@ -116,8 +118,12 @@ class FetcherOutArgs(object):
     with subprocess PyCURL invocation.
     """
 
-    def __init__(self, httpCode=None, data=None, headerStr=None,
-                 errorStr=None, shortError=None):
+    def __init__(self,
+                 httpCode=None,
+                 data=None,
+                 headerStr=None,
+                 errorStr=None,
+                 shortError=None):
         """
         @param httpCode: return HTTP code as int
         @param data: data fetched from URL as str
@@ -136,39 +142,54 @@ class HTTPFetcherError(RuntimeError):
     pass
 
 
-class ErrorSanitizer():
+class ErrorSanitizer:
     """ Sanitize errors thrown by sub-tools and libraries
     """
 
     def __init__(self):
-        self.fetch_pattern = [("Could not resolve host", "Could not resolve host"),
-                              ("Resolving timed out after", "Resolving timeout"),
-                              ("Operation timed out after", "Operation timeout"),
-                              ("Connection timed out after", "Connection timeout"),
-                              ("Error in protocol version",
-                               "gnutls: protocol version error"),
-                              ("server certificate verification failed",
-                               "gnutls: certificate verification failed"),
-                              ("The server name sent was not recognized",
-                               "gnutls: server name not recognized"),
-                              ("The TLS connection was non-properly terminated",
-                               "gnutls: termination error"),
-                              ("gnutls_handshake\\(\\) failed: Handshake failed",
-                               "gnutls: handshake failed"),
-                              ("gnutls_handshake\\(\\) failed: A record packet with illegal version was received",
-                               "gnutls: handshake fail, illegal version"),
-                              ("does not match target host name.*SSL: certificate subject name",
-                               "ssl: certificate subject mismatch"),
-                              ("Failed to connect to .*No route to host",
-                               "no route to host"),
-                              ("Failed to connect to .*Connection refused",
-                               "connection refused"),
-                              ("gnutls_handshake\\(\\) failed: Error in the pull function\\.",
-                               "gnutls: handshake fail in pull"),
-                              ("gnutls_handshake\\(\\) failed: Internal error",
-                               "gnutls: handshake fail internal error"),
-                              ("Empty reply from server", "empty reply")
-                              ]
+        self.fetch_pattern = [
+            ("Could not resolve host", "Could not resolve host"),
+            ("Resolving timed out after", "Resolving timeout"),
+            ("Operation timed out after", "Operation timeout"),
+            ("Connection timed out after", "Connection timeout"),
+            ("Error in protocol version", "gnutls: protocol version error"),
+            (
+                "server certificate verification failed",
+                "gnutls: certificate verification failed",
+            ),
+            (
+                "The server name sent was not recognized",
+                "gnutls: server name not recognized",
+            ),
+            (
+                "The TLS connection was non-properly terminated",
+                "gnutls: termination error",
+            ),
+            (
+                "gnutls_handshake\\(\\) failed: Handshake failed",
+                "gnutls: handshake failed",
+            ),
+            (
+                "gnutls_handshake\\(\\) failed: A record packet with illegal version was received",
+                "gnutls: handshake fail, illegal version",
+            ),
+            (
+                "does not match target host name.*SSL: certificate subject name",
+                "ssl: certificate subject mismatch",
+            ),
+            ("Failed to connect to .*No route to host", "no route to host"),
+            ("Failed to connect to .*Connection refused",
+             "connection refused"),
+            (
+                "gnutls_handshake\\(\\) failed: Error in the pull function\\.",
+                "gnutls: handshake fail in pull",
+            ),
+            (
+                "gnutls_handshake\\(\\) failed: Internal error",
+                "gnutls: handshake fail internal error",
+            ),
+            ("Empty reply from server", "empty reply"),
+        ]
         pass
 
     def fetcher(self, shortError, errorStr):
@@ -223,18 +244,18 @@ class HTTPFetcher(object):
 
         # Strip any leading ./ and ../
         path = joinedUrlParts.path
-        if path[:1] == '/':
-            segments = path.split('/')
-            while '.' in segments:
-                segments.remove('.')
-            while '..' in segments:
-                segments.remove('..')
-            path = '/'.join(segments)
+        if path[:1] == "/":
+            segments = path.split("/")
+            while "." in segments:
+                segments.remove(".")
+            while ".." in segments:
+                segments.remove("..")
+            path = "/".join(segments)
 
         # Non-trivial rewrites do not work without a trailing '/'
         # See https://github.com/EFForg/https-everywhere/issues/14365
-        if path == '':
-            path = '/'
+        if path == "":
+            path = "/"
 
         joinedUrlParts = urllib.parse.ParseResult(
             joinedUrlParts.scheme,
@@ -267,15 +288,17 @@ class HTTPFetcher(object):
         # just directly executed this script.
         # TODO: check PYTHONPATH etc if not in the same dir as script
         # TODO: we should set the main process to be session leader
-        trampoline = 'from https_everywhere_checker import http_client; http_client.subprocessFetch()'
+        trampoline = "from https_everywhere_checker import http_client; http_client.subprocessFetch()"
 
         # Spawn subprocess, call this module as "main" program. I tried
         # also using python's multiprocessing module, but for some
         # reason it was a hog on CPU and RAM (maybe due to the queues?)
         # Also, logging module didn't play along nicely.
-        args = [sys.executable, '-c', trampoline]
-        p = subprocess.Popen(args, stdin=subprocess.PIPE,
-                             stdout=subprocess.PIPE,	stderr=subprocess.PIPE)
+        args = [sys.executable, "-c", trampoline]
+        p = subprocess.Popen(args,
+                             stdin=subprocess.PIPE,
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE)
 
         # Hopefully we shouldn't deadlock here: first all data is written
         # to subprocess's stdin, it will unpickle them first. Then we
@@ -291,11 +314,12 @@ class HTTPFetcher(object):
             raise HTTPFetcherError(
                 "Subprocess failed with exit code {}".format(exitCode))
 
-        #logging.debug("Subprocess finished OK")
+        # logging.debug("Subprocess finished OK")
         unpickled = pickle.loads(outData)
         if not isinstance(unpickled, FetcherOutArgs):
-            raise HTTPFetcherError("Unexpected datatype received from subprocess: {}".format(
-                                   type(unpickled)))
+            raise HTTPFetcherError(
+                "Unexpected datatype received from subprocess: {}".format(
+                    type(unpickled)))
         if unpickled.errorStr:  # chained exception tracebacks are bit ugly/long
             assert unpickled.shortError is not None
             raise HTTPFetcherError(ErrorSanitizer().fetcher(
@@ -329,26 +353,31 @@ class HTTPFetcher(object):
             c.setopt(c.COOKIEFILE, COOKIE_FILE_NAME)
             c.setopt(c.TIMEOUT, options.readTimeout)
             # Validation should not be disabled except for debugging
-            #c.setopt(c.SSL_VERIFYPEER, 0)
-            #c.setopt(c.SSL_VERIFYHOST, 0)
+            # c.setopt(c.SSL_VERIFYPEER, 0)
+            # c.setopt(c.SSL_VERIFYHOST, 0)
             c.setopt(c.CAPATH, platformPath)
             # We want to check against only the above path, but unfortunately
             # curl will not function properly unless *some* valid certificate
             # is provided for CURLOPT_CAINFO. This can not be set to null...
-            c.setopt(c.CAINFO, str(pathlib.Path('test', 'rules', 'platform_certs', 'default', 'cert001.pem')))
+            c.setopt(
+                c.CAINFO,
+                str(
+                    pathlib.Path("test", "rules", "platform_certs", "default",
+                                 "cert001.pem")),
+            )
             if options.userAgent:
                 c.setopt(c.USERAGENT, options.userAgent)
             # Sending this extra header is necessary for weird edge cases.  See https://github.com/EFForg/https-everywhere/pull/10944
-            c.setopt(c.HTTPHEADER, ['X-Extra-Header: true'])
+            c.setopt(c.HTTPHEADER, ["X-Extra-Header: true"])
             c.setopt(c.SSLVERSION, options.sslVersion)
             c.setopt(c.VERBOSE, options.curlVerbose)
             c.setopt(c.SSL_CIPHER_LIST, options.cipherList)
-            if urlParts.hostname[-6:] == '.onion':
-                c.setopt(c.PROXY, 'socks5h://127.0.0.1:9050')
+            if urlParts.hostname[-6:] == ".onion":
+                c.setopt(c.PROXY, "socks5h://127.0.0.1:9050")
             c.perform()
 
             bufValue = buf.getvalue()
-            headerStr = headerBuf.getvalue().decode('utf-8', 'ignore')
+            headerStr = headerBuf.getvalue().decode("utf-8", "ignore")
             httpCode = c.getinfo(pycurl.HTTP_CODE)
         finally:
             buf.close()
@@ -397,18 +426,21 @@ class HTTPFetcher(object):
 
             # shitty HTTP header parsing
             if httpCode == 0:
-                raise HTTPFetcherError("Pycurl fetch failed for '{}'".format(newUrl))
+                raise HTTPFetcherError(
+                    "Pycurl fetch failed for '{}'".format(newUrl))
             elif httpCode in (301, 302, 303, 307, 308):
                 location = None
-                for piece in headerStr.split('\n'):
-                    if piece.lower().startswith('location:'):
-                        location = piece[len('location:'):].strip()
+                for piece in headerStr.split("\n"):
+                    if piece.lower().startswith("location:"):
+                        location = piece[len("location:"):].strip()
                 if location is None:
                     raise HTTPFetcherError(
-                        "Redirect for '{}' missing location header".format(newUrl))
+                        "Redirect for '{}' missing location header".format(
+                            newUrl))
 
                 location = self.absolutizeUrl(newUrl, location)
-                logging.debug("Following redirect {} => {}".format(newUrl, location))
+                logging.debug("Following redirect {} => {}".format(
+                    newUrl, location))
 
                 if self.ruleTrie:
                     ruleMatch = self.ruleTrie.transformUrl(location)
@@ -426,8 +458,8 @@ class HTTPFetcher(object):
                         newUrlPlatformPath = self.platformPath
 
                     if newUrl != location:
-                        logging.debug(
-                            "Redirect rewritten: {} => {}".format(location, newUrl))
+                        logging.debug("Redirect rewritten: {} => {}".format(
+                            location, newUrl))
                 else:
                     newUrl = location
 
@@ -435,7 +467,8 @@ class HTTPFetcher(object):
 
             return (httpCode, bufValue)
 
-        raise HTTPFetcherError("Too many redirects while fetching '{}'".format(url))
+        raise HTTPFetcherError(
+            "Too many redirects while fetching '{}'".format(url))
 
 
 def subprocessFetch():
@@ -449,8 +482,8 @@ def subprocessFetch():
     try:
         inArgs = pickle.load(sys.stdin)
         inArgs.check()
-        outArgs = HTTPFetcher.staticFetch(
-            inArgs.url, inArgs.options, inArgs.platformPath)
+        outArgs = HTTPFetcher.staticFetch(inArgs.url, inArgs.options,
+                                          inArgs.platformPath)
     except BaseException as e:  # this will trap KeyboardInterrupt as well
         errorStr = traceback.format_exc()
         shortError = str(e)
@@ -458,8 +491,8 @@ def subprocessFetch():
 
     if outArgs is None:
         shortError = "Subprocess logic error - no output args"
-        errorStr = traceback.format_exception_only(HTTPFetcherError,
-                                                   HTTPFetcherError(shortError))
+        errorStr = traceback.format_exception_only(
+            HTTPFetcherError, HTTPFetcherError(shortError))
         outArgs = FetcherOutArgs(errorStr=errorStr, shortError=shortError)
 
     try:
