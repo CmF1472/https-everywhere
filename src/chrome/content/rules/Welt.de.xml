@@ -74,5 +74,5 @@
 	<test url="http://img.welt.de/img/config_master_header/orig149433181/3270004236/welt-logo-trans.png" />
 
 	<rule from="^http:" to="https:" />
-	
+
 </ruleset>
