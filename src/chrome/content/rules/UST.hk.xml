@@ -85,11 +85,11 @@
 	<target host="owa.exchange.ust.hk" />
 	<target host="lib.ezproxy.ust.hk" />
 	<target host="login.lib.ezproxy.ust.hk" />
-	
+
 	<target host="facultyprofiles.ust.hk" />
 
 	<target host="giving.ust.hk" />
-	
+
 	<target host="hseo.ust.hk" />
 
 	<target host="idp.ust.hk" />
@@ -100,7 +100,7 @@
 	<target host="iso.ust.hk" />
 	<target host="itsc.ust.hk" />
 	<target host="itscapps.ust.hk" />
-	
+
 	<target host="hkustcareers.ust.hk" />
 
 	<target host="join.ust.hk" />
@@ -127,7 +127,7 @@
 	<target host="www.math.ust.hk" />
 	<target host="myaccount.ust.hk" />
 	<target host="mystudyabroad.ust.hk" />
-	
+
 	<target host="news.ust.hk" />
 
 	<target host="onemilliondollar.ust.hk" />
