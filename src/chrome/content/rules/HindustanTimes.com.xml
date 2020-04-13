@@ -35,6 +35,6 @@
 	<target host="unclogmumbai.hindustantimes.com" />
 
 	<securecookie host=".+" name=".+" />
-	
+
 	<rule from="^http:" to="https:" />
 </ruleset>
