@@ -86,6 +86,7 @@ class Test(object):
     def __hash__(self):
         return self.url.__hash__()
 
+
 class Ruleset(object):
     """Represents one XML ruleset file."""
 
@@ -107,7 +108,7 @@ class Ruleset(object):
 
     # functional description of converting XML elements/attributes into
     # instance variables. Tuples are:
-    #(attribute name in this class, XPath expression, conversion function into value)
+    # (attribute name in this class, XPath expression, conversion function into value)
     _attrConvert = [
         ("name",	"@name", 		_strAttr),
         ("platform",	"@platform", 		_strAttr),
@@ -255,7 +256,8 @@ class Ruleset(object):
                           target and target_re.search(other)]
 
                 if others:
-                    problems.append("{}: Target '{}' also covers {}".format(self.filename, target, others))
+                    problems.append("{}: Target '{}' also covers {}".format(
+                        self.filename, target, others))
 
             # Ignore right-wildcard targets for TLD checks
             if target.endswith(".*"):
@@ -278,7 +280,8 @@ class Ruleset(object):
             # Extract TLD from target if possible
             res = tldextract.extract(target)
             if res.suffix == "":
-                problems.append("{}: Target '{}' missing eTLD".format(self.filename, target))
+                problems.append("{}: Target '{}' missing eTLD".format(
+                    self.filename, target))
             elif res.domain == "":
                 problems.append("{}: Target '{}' containing entire eTLD".format(
                     self.filename, target))
