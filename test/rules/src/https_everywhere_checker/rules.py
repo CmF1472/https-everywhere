@@ -1,8 +1,8 @@
-from tldextract import tldextract
+import socket
 from urllib.parse import urlparse
 
 import regex
-import socket
+from tldextract import tldextract
 
 
 class Rule(object):
@@ -33,7 +33,8 @@ class Rule(object):
         return self.fromRe.search(url) is not None
 
     def __repr__(self):
-        return "<Rule from '{}' to '{}'>".format(self.fromRe.pattern, self.toPattern)
+        return "<Rule from '{}' to '{}'>".format(self.fromRe.pattern,
+                                                 self.toPattern)
 
     def __str__(self):
         return self.__repr__()
@@ -86,36 +87,40 @@ class Test(object):
     def __hash__(self):
         return self.url.__hash__()
 
+
 class Ruleset(object):
     """Represents one XML ruleset file."""
 
     # extracts value of first attribute in list as a string
-    def _strAttr(attrList): return attrList[0]
+    def _strAttr(attrList):
+        return attrList[0]
 
     # extract attribute value
-    def _targetAttrs(attrList): return tuple(attr for attr in attrList)
+    def _targetAttrs(attrList):
+        return tuple(attr for attr in attrList)
 
     # convert each etree Element of list into Rule
-    def _rulesConvert(elemList): return [Rule(elem) for elem in elemList]
+    def _rulesConvert(elemList):
+        return [Rule(elem) for elem in elemList]
 
     # convert each etree Element of list into Exclusion
-    def _exclusionConvert(elemList): return [
-        Exclusion(elem) for elem in elemList]
+    def _exclusionConvert(elemList):
+        return [Exclusion(elem) for elem in elemList]
 
-    def _testConvert(elemList): return [Test(
-        elem.attrib["url"]) for elem in elemList]
+    def _testConvert(elemList):
+        return [Test(elem.attrib["url"]) for elem in elemList]
 
     # functional description of converting XML elements/attributes into
     # instance variables. Tuples are:
-    #(attribute name in this class, XPath expression, conversion function into value)
+    # (attribute name in this class, XPath expression, conversion function into value)
     _attrConvert = [
-        ("name",	"@name", 		_strAttr),
-        ("platform",	"@platform", 		_strAttr),
-        ("defaultOff",	"@default_off", 	_strAttr),
-        ("targets",	"target/@host",		_targetAttrs),
-        ("rules",	"rule", 		_rulesConvert),
-        ("exclusions",	"exclusion", 		_exclusionConvert),
-        ("tests",	"test", 		_testConvert),
+        ("name", "@name", _strAttr),
+        ("platform", "@platform", _strAttr),
+        ("defaultOff", "@default_off", _strAttr),
+        ("targets", "target/@host", _targetAttrs),
+        ("rules", "rule", _rulesConvert),
+        ("exclusions", "exclusion", _exclusionConvert),
+        ("tests", "test", _testConvert),
     ]
 
     def __init__(self, xmlTree, filename):
@@ -172,7 +177,7 @@ class Ruleset(object):
         """In addition to any tests provided as <test> elements, add a test case for
         each non-wildcard target."""
         for target in self.targets:
-            if '*' in target:
+            if "*" in target:
                 continue
             self.tests.append(Test("http://{}/".format(target)))
 
@@ -186,16 +191,18 @@ class Ruleset(object):
             if len(self.tests) != len(set(self.tests)):
                 for test in set(self.tests):
                     if self.tests.count(test) > 1:
-                        self.test_application_problems.append("%s: Duplicated test URL found %s" % (
-                            self.filename, test.url))
+                        self.test_application_problems.append(
+                            "%s: Duplicated test URL found %s" %
+                            (self.filename, test.url))
 
             for test in self.tests:
                 applies = self.whatApplies(test.url)
                 if applies:
                     applies.tests.append(test)
                 else:
-                    self.test_application_problems.append("{}: No rule or exclusion applies to test URL {}".format(
-                        self.filename, test.url))
+                    self.test_application_problems.append(
+                        "{}: No rule or exclusion applies to test URL {}".
+                        format(self.filename, test.url))
 
             for test in self.tests:
                 urlParts = urlparse(test.url)
@@ -204,25 +211,26 @@ class Ruleset(object):
                 isCovered = hostname in self.targets
 
                 if not isCovered:
-                    parts = hostname.split('.')
+                    parts = hostname.split(".")
 
                     for i in range(len(parts)):
                         tmp = parts[i]
-                        parts[i] = '*'
+                        parts[i] = "*"
 
-                        if '.'.join(parts) in self.targets:
+                        if ".".join(parts) in self.targets:
                             isCovered = True
                             break
 
-                        if '.'.join(parts[i:len(parts)]) in self.targets:
+                        if ".".join(parts[i:len(parts)]) in self.targets:
                             isCovered = True
                             break
 
                         parts[i] = tmp
 
                 if not isCovered:
-                    self.test_application_problems.append("{}: No target applies to test URL {}".format(
-                        self.filename, test.url))
+                    self.test_application_problems.append(
+                        "{}: No target applies to test URL {}".format(
+                            self.filename, test.url))
 
             self.determine_test_application_run = True
         return self.test_application_problems
@@ -240,22 +248,25 @@ class Ruleset(object):
         # Next, make sure each target has a valid TLD and doesn't overlap with others
         for target in self.targets:
             # If it's a wildcard, check which other targets it covers
-            if '*' in target:
+            if "*" in target:
                 target_re = regex.escape(target)
 
-                if target_re.startswith(r'\*'):
+                if target_re.startswith(r"\*"):
                     target_re = target_re[2:]
                 else:
-                    target_re = r'\A' + target_re
+                    target_re = r"\A" + target_re
 
                 target_re = regex.compile(
-                    target_re.replace(r'\*', r'[^.]*') + r'\Z')
+                    target_re.replace(r"\*", r"[^.]*") + r"\Z")
 
-                others = [other for other in self.targets if other !=
-                          target and target_re.search(other)]
+                others = [
+                    other for other in self.targets
+                    if other != target and target_re.search(other)
+                ]
 
                 if others:
-                    problems.append("{}: Target '{}' also covers {}".format(self.filename, target, others))
+                    problems.append("{}: Target '{}' also covers {}".format(
+                        self.filename, target, others))
 
             # Ignore right-wildcard targets for TLD checks
             if target.endswith(".*"):
@@ -278,10 +289,12 @@ class Ruleset(object):
             # Extract TLD from target if possible
             res = tldextract.extract(target)
             if res.suffix == "":
-                problems.append("{}: Target '{}' missing eTLD".format(self.filename, target))
-            elif res.domain == "":
-                problems.append("{}: Target '{}' containing entire eTLD".format(
+                problems.append("{}: Target '{}' missing eTLD".format(
                     self.filename, target))
+            elif res.domain == "":
+                problems.append(
+                    "{}: Target '{}' containing entire eTLD".format(
+                        self.filename, target))
 
         return problems
 
@@ -318,26 +331,27 @@ class Ruleset(object):
                 needed_count = 10
 
             # non-wildcard target always have an implicit test url, if is it not excluded
-            if not "*" in target and not self.excludes(("http://{}/".format(target))):
+            if not "*" in target and not self.excludes(
+                ("http://{}/".format(target))):
                 continue
 
             # According to the logic in rules.js available at
             # EFForg/https-everywhere/blob/07fe9bd51456cc963c2d99e327f3183e032374ee/chromium/rules.js#L404
             #
-            pattern = target.replace('.', r'\.')  # .replace('*', '.+')
+            pattern = target.replace(".", r"\.")  # .replace('*', '.+')
 
             # `*.example.com` matches `bar.example.com` and `foo.bar.example.com` etc.
-            if pattern[0] == '*':
-                pattern = pattern.replace('*', '.+')
+            if pattern[0] == "*":
+                pattern = pattern.replace("*", ".+")
 
             # however, `example.*` match `example.com` but not `example.co.uk`
-            if pattern[-1] == '*':
-                pattern = pattern.replace('*', '[^.]+')
+            if pattern[-1] == "*":
+                pattern = pattern.replace("*", "[^.]+")
 
             # `www.*.example.com` match `www.image.example.com` but not `www.ssl.image.example.com`
-            pattern = pattern.replace('*', '[^.]+')
+            pattern = pattern.replace("*", "[^.]+")
 
-            pattern = '^' + pattern + '$'
+            pattern = "^" + pattern + "$"
 
             for test in myTestTargets:
                 if regex.search(pattern, test) is not None:
@@ -347,40 +361,43 @@ class Ruleset(object):
                         break
 
             if actual_count < needed_count:
-                problems.append("{}: Not enough tests ({} vs {}) for {}".format(
-                    self.filename, actual_count, needed_count, target))
+                problems.append(
+                    "{}: Not enough tests ({} vs {}) for {}".format(
+                        self.filename, actual_count, needed_count, target))
 
         # Next, make sure each rule or exclusion has sufficient tests.
         for rule in self.rules:
             needed_count = 1 + len(regex.findall("[+*?|]", rule.fromPattern))
             # Don't treat the question mark in non-capturing and lookahead groups as increasing the
             # number of required tests.
-            needed_count = needed_count - \
-                len(regex.findall(r"\(\?:", rule.fromPattern))
-            needed_count = needed_count - \
-                len(regex.findall(r"\(\?!", rule.fromPattern))
-            needed_count = needed_count - \
-                len(regex.findall(r"\(\?=", rule.fromPattern))
+            needed_count = needed_count - len(
+                regex.findall(r"\(\?:", rule.fromPattern))
+            needed_count = needed_count - len(
+                regex.findall(r"\(\?!", rule.fromPattern))
+            needed_count = needed_count - len(
+                regex.findall(r"\(\?=", rule.fromPattern))
             # Don't treat escaped questions marks as increasing the number of required
             # tests.
-            needed_count = needed_count - \
-                len(regex.findall(r"\?", rule.fromPattern))
+            needed_count = needed_count - len(
+                regex.findall(r"\?", rule.fromPattern))
             actual_count = len(rule.tests)
             if actual_count < needed_count:
-                problems.append("{}: Not enough tests ({} vs {}) for {}".format(
-                    self.filename, actual_count, needed_count, rule))
+                problems.append(
+                    "{}: Not enough tests ({} vs {}) for {}".format(
+                        self.filename, actual_count, needed_count, rule))
                 pass
         for exclusion in self.exclusions:
-            needed_count = 1 + \
-                len(regex.findall("[+*?|]", exclusion.exclusionPattern))
-            needed_count = needed_count - \
-                len(regex.findall(r"\(\?:", exclusion.exclusionPattern))
-            needed_count = needed_count - \
-                len(regex.findall(r"\?", rule.fromPattern))
+            needed_count = 1 + len(
+                regex.findall("[+*?|]", exclusion.exclusionPattern))
+            needed_count = needed_count - len(
+                regex.findall(r"\(\?:", exclusion.exclusionPattern))
+            needed_count = needed_count - len(
+                regex.findall(r"\?", rule.fromPattern))
             actual_count = len(exclusion.tests)
             if actual_count < needed_count:
-                problems.append("{}: Not enough tests ({} vs {}) for {}".format(
-                    self.filename, actual_count, needed_count, exclusion))
+                problems.append(
+                    "{}: Not enough tests ({} vs {}) for {}".format(
+                        self.filename, actual_count, needed_count, exclusion))
         return problems
 
     def getNonmatchGroupProblems(self):
@@ -395,8 +412,9 @@ class Ruleset(object):
                     replacement_url = rule.apply(test.url)
                 except Exception as e:
                     if ~e.message.index("invalid group reference"):
-                        problems.append("{}: Rules include non-matched groups in replacement for url: {}".format(
-                            self.filename, test.url))
+                        problems.append(
+                            "{}: Rules include non-matched groups in replacement for url: {}"
+                            .format(self.filename, test.url))
         return problems
 
     def getTestFormattingProblems(self):
@@ -406,9 +424,10 @@ class Ruleset(object):
         for rule in self.rules:
             for test in rule.tests:
                 parsed_url = urlparse(test.url)
-                if parsed_url.path == '':
-                    problems.append("{}: Test url lacks a trailing /: {}".format(
-                        self.filename, test.url))
+                if parsed_url.path == "":
+                    problems.append(
+                        "{}: Test url lacks a trailing /: {}".format(
+                            self.filename, test.url))
         return problems
 
     def whatApplies(self, url):
@@ -420,7 +439,8 @@ class Ruleset(object):
                 return rule
 
     def __repr__(self):
-        return "<Ruleset(name={}, platform={})>".format(repr(self.name), repr(self.platform))
+        return "<Ruleset(name={}, platform={})>".format(
+            repr(self.name), repr(self.platform))
 
     def __str__(self):
         return self.__repr__()
