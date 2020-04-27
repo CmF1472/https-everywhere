@@ -4,4 +4,3 @@
   <rule from="^http://svenskaspel\.se/" to="https://svenskaspel.se/"/>
   <rule from="^http://www\.svenskaspel\.se/" to="https://svenskaspel.se/"/>
 </ruleset>
-
