@@ -11,7 +11,7 @@
   <target host="myhealth.islandhealth.ca" />
   <target host="nihp.islandhealth.ca" />
   <target host="spark.islandhealth.ca" />
-  
+
 	<rule from="^http:" to="https:" />
 
 </ruleset>
