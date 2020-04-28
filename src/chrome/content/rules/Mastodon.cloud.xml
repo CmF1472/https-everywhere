@@ -4,7 +4,7 @@
 	mail.mastodon.cloud (t)
 	s3.mastodon.cloud (t)
 	status.mastodon.cloud (t)
-	www.mastodon.cloud (t)	
+	www.mastodon.cloud (t)
 
 	h: http redirect
 	m: certificate mismatch
@@ -14,9 +14,9 @@
 -->
 <ruleset name="Mastodon.cloud">
 	<target host="mastodon.cloud" />
-	
+
 	<target host="media.mastodon.cloud" />
-	
+
 	<securecookie host=".+" name=".+" />
 
 	<rule from="^http:" to="https:" />
