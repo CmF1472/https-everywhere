@@ -7,6 +7,7 @@ kittens_url = 'http://freerangekitten.com/'
 
 http_url = 'http://http.badssl.com/'
 
+
 class TestNavigation(ExtensionTestCase):
     def test_redirect(self):
         sleep(3)
