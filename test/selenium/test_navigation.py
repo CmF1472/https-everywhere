@@ -3,15 +3,16 @@ from time import sleep
 
 from util import ExtensionTestCase
 
-kittens_url = 'http://freerangekitten.com/'
+kittens_url = "http://freerangekitten.com/"
 
-http_url = 'http://http.badssl.com/'
+http_url = "http://http.badssl.com/"
+
 
 class TestNavigation(ExtensionTestCase):
     def test_redirect(self):
         sleep(3)
         self.driver.get(kittens_url)
-        self.assertTrue(self.driver.current_url.startswith('https'))
+        self.assertTrue(self.driver.current_url.startswith("https"))
 
     def test_no_redirect_when_disabled(self):
         self.toggle_disabled()
@@ -21,7 +22,7 @@ class TestNavigation(ExtensionTestCase):
     def test_httpnowhere_blocks(self):
         # if self.shim.browser_type == 'firefox':
         #     raise unittest.SkipTest('broken on firefox')
-        href_script = 'return window.location.href;'
+        href_script = "return window.location.href;"
         self.driver.get(http_url)
         self.toggle_http_nowhere()
         self.assertFalse(http_url == self.driver.execute_script(href_script))
