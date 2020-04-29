@@ -11,7 +11,7 @@ if [ "$1" != "--no-prompt" ]; then
   echo
   echo -n "Are you sure you want to continue? [y/N]: "
   read CONTINUE
-  CONTINUE=`echo "$CONTINUE" | xargs | head -c 1 | awk '{print tolower($0)}'`
+  CONTINUE=$(echo "$CONTINUE" | xargs | head -c 1 | awk '{print tolower($0)}')
   if [ "$CONTINUE" != "y" ]; then
     exit
   fi
@@ -29,7 +29,7 @@ else
 fi
 
 # debian based installation
-if type apt-get>/dev/null 2>&1;  then
+if type apt-get >/dev/null 2>&1; then
   "$SUDO_SHIM" apt-get update
   "$SUDO_SHIM" apt-get install -y lsb-release
   BROWSERS="firefox chromium-browser"
@@ -44,7 +44,7 @@ if type apt-get>/dev/null 2>&1;  then
   "$SUDO_SHIM" apt-get install -y libxml2-dev libxml2-utils libxslt1-dev \
     python3.6-dev "$BROWSERS" zip sqlite3 python3-pip libcurl4-openssl-dev xvfb \
     libssl-dev git curl "$CHROMEDRIVER"
-  if ! type geckodriver >/dev/null 2>&1;  then
+  if ! type geckodriver >/dev/null 2>&1; then
     curl -LO "https://github.com/mozilla/geckodriver/releases/download/v0.24.0/geckodriver-v0.24.0-linux$ARCH.tar.gz"
     tar -zxvf "geckodriver-v0.24.0-linux$ARCH.tar.gz"
     rm -f "geckodriver-v0.24.0-linux$ARCH.tar.gz"
@@ -61,7 +61,7 @@ elif type brew >/dev/null 2>&1; then
   brew list python &>/dev/null || brew install python
   brew cask install chromedriver
   brew install libxml2 gnu-sed
-  if ! echo "$PATH" | grep -ql /usr/local/bin ; then
+  if ! echo "$PATH" | grep -ql /usr/local/bin; then
     echo '/usr/local/bin not found in $PATH, please add it.'
   fi
 
@@ -78,7 +78,7 @@ elif type dnf >/dev/null 2>&1; then
     "$SUDO_SHIM" chown root /usr/bin/chromedriver
     "$SUDO_SHIM" chmod 755 /usr/bin/chromedriver
   fi
-  if ! type geckodriver >/dev/null 2>&1;  then
+  if ! type geckodriver >/dev/null 2>&1; then
     curl -LO "https://github.com/mozilla/geckodriver/releases/download/v0.24.0/geckodriver-v0.24.0-macos.tar.gz"
     tar -zxvf "geckodriver-v0.24.0-macos.tar.gz"
     rm -f "geckodriver-v0.24.0-macos.tar.gz"
@@ -93,10 +93,10 @@ elif type dnf >/dev/null 2>&1; then
   fi
   export PYCURL_SSL_LIBRARY=openssl
 else
-    echo \
-    "Your distro isn't supported by this script yet!"\
+  echo \
+    "Your distro isn't supported by this script yet!" \
     "Please install dependencies manually."
-    exit
+  exit
 fi
 
 # Get the addon SDK submodule and rule checker
